@@ -1,0 +1,59 @@
+---
+title: "Homework 2"
+author: "Kate Mykhaylova"
+output: html_document
+date: '2023-02-03'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## 1. Analyze + document
+
+```{r}
+life5060 <- read.csv("https://raw.githubusercontent.com/yumouqiu/DS202-Spring2023/main/Lecture1_collaborative-environment/data/gapminder-5060.csv")
+head(life5060)
+```
+```{r}
+canada <- life5060 %>% filter(country == "Canada")
+head(canada)
+# canada1 <- life5060[life5060$country == "Canada", ]
+# head(canada1)
+```
+
+1. Visualize life expectancy over time for Canada in the 1950s and 1960s using a line plot.
+
+```{r pressure, echo=FALSE}
+canada %>% 
+  ggplot(aes(x = year, y = lifeExp)) + geom_line()
+```
+
+2. Something is clearly wrong with this plot! Turns out there’s a data error in the data file: life expectancy for Canada in the year 1957 is coded as 999999, it should actually be 69.96. Make this correction.
+
+```{r}
+canada %>% filter(year == 1957)
+canada_fixed <- canada %>% mutate(lifeExp = replace(lifeExp, year==1957, 69.96))
+canada_fixed
+```
+
+3. Visualize life expectancy over time for Canada again, with the corrected data.
+
+```{r}
+canada_fixed %>% ggplot(aes(x = year, y = lifeExp)) + geom_line()
+
+# plot(x = canada_fixed$year, y = canada_fixed$lifeExp, type = 'l', xlab = "year", ylab = "lifeExp")
+```
+
+Pro goal: Add lines for Mexico and the United States.
+
+```{r}
+canada_fixed %>% 
+  ggplot(aes(x = year, y = lifeExp, colour=country)) + geom_line() + geom_line(data = life5060 %>% 
+              filter(country %in% c("United States", "Mexico")))
+```
+
+## Reflection
+
+There were no issues reproducing other work. Going into Github, it is easy to copy the raw version of the file and then paste it into a new file into RStudio. The instructions were clear on how to do that and the software was not having any issues. It is easy to access new data if the database had to be switched by replacing it in the import file code. From there, you can use the same elements of R to find data that is needed. 
