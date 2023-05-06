@@ -1,0 +1,222 @@
+---
+title: "Final Project"
+author: "Kate Mykhaylova"
+date: "5/11/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#https://www.kaggle.com/datasets/kalilurrahman/global-economy-population-data-from-macrotrends
+```
+
+```{r}
+library(class)
+library(tidyverse)
+library(ggplot2)
+library(plyr)
+library(plotly)
+library(MASS)
+library(reshape)
+```
+
+DATA IMPORTATION AND CLEANING
+
+```{r}
+Population <- read.csv("Population.csv")
+Inflation <- read.csv("Inflation.csv")
+GNI <- read.csv("GNI.csv")
+GDP <- read.csv("GDP.csv")
+GDPPerCapita <- read.csv("GDPPerCapita.csv") 
+GDPGrowth <- read.csv("GDPGrowth.csv")
+```
+
+```{r}
+GDPPerCapita = melt(GDPPerCapita, na.rm = FALSE, id.vars = "Country.Name", variable.name = "Year", value.name = "GDP Per Capita")
+GDPPerCapita
+# Rename Country.Name column name to ColumnName
+# Population <- Population %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+# Inflation <- Inflation %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+# GNI <- GNI %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+# GDP <- GDP %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+# GDPPerCapita <- GDPPerCapita %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+# GDPGrowth <- GDPGrowth %>% rename("CountryName" = "Country.Name")
+# colnames(Population)
+```
+
+```{r}
+#Countries used from the data table.
+Countries <- c("Belgium", "Brazil", "Canada", "China", "Egypt", "France", "Germany", "Iceland", "Italy", "Japan", "Mexico", "Saudi Arabia", "South Africa", "South Korea", "Spain", "Sweden", "Switzerland", "United Kingdom", "United States", "Turkey")
+Population20 = Population %>% filter(CountryName %in% Countries)
+is.null(Population20) # No null values in this dataset
+
+Inflation20 = Inflation %>% filter(CountryName %in% Countries)
+is.null(Inflation20) # No null values in this dataset
+
+GNI20 = GNI %>% filter(CountryName %in% Countries)
+is.null(GNI20) # No null values in this dataset
+
+GDP20 = GDP %>% filter(CountryName %in% Countries)
+is.null(GDP20) # No null values in this dataset
+
+GDPPerCapita20 = GDPPerCapita %>% filter(CountryName %in% Countries)
+is.null(GDPPerCapita20) # No null values in this dataset
+
+GDPGrowth20 = GDPGrowth %>% filter(CountryName %in% Countries)
+is.null(GDPGrowth20) # No null values in this dataset
+head(GDP20, 20)
+```
+
+```{r}
+# row.names(Population20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+# 
+# row.names(Inflation20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+# 
+# row.names(GNI20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+# 
+# row.names(GDP20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+# 
+# row.names(GDPPerCapita20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+# 
+# row.names(GDPGrowth20) <- c("UnitedStates", "China", "Japan", "Germany", "UnitedKingdom", "France", "Italy", "Brazil", "SouthKorea", "Canada", "Spain", "Mexico", "SaudiArabia", "Turkey", "Switzerland", "Sweden", "Belgium", "SouthAfrica", "Egypt", "Iceland")
+```
+
+1. Line Plot: Which 5 countries have the highest GDP in 2018? How are the plots related over time?
+
+Expectations:
+  We expect mostly western countries to have the highest GDP. This is because western countries prioritize capitalism. I expect this support to show up in the data, and I expect the plots to be mostly related.
+
+Post Code: 
+  The 5 counties with the highest GDP in 2018 are: The United States, China, Japan, Germany, and UK in that order. All of the countries have a steady incline of growth, some with more growth than other. Overall, the countries that experienced most growth are US and China, while the rest experienced a slight decline at the end of 2014, but did have a gradual growth after. Overall my expectations were met.
+
+``` {r}
+head(GDP20)
+#Countries with the highest GDP in 2018 are United States, China, Japan, Germany, and UK
+TopCountries <- c('United States', 'China', 'Japan', 'Germany', 'United Kingdom')
+year <- c('X2018', 'X2017', 'X2016', 'X2015', 'X2014')
+GDPTop5 = GDP20 %>% filter(CountryName %in% TopCountries)
+head(GDPTop5, 5)
+```
+
+```{r}
+#Plot
+plot <- data.frame(data = GDPTop5,
+                 x = year,
+                 y = TopCountries,
+                 group = rep(c("United States", "China", "Japan", "Germany", "United Kingdom"), each = 28))
+  
+ggplot(plot, aes(x, y, col = group)) +
+  geom_line() + 
+  labs(title = "Country GDP per Year", y = "GDP", x = "Year")
+```
+
+2. Barplot: Find the cumulative GDP Growth change from 2014 to 2018 for all countries. Then plot in a barchart the cumulative change for each country. How does it look? How does each country compare to the healthy 28 year cumulative inflation rate (~56%)?
+
+Expectations:
+  As with the last question we expect mostly western countries to have healthy data. We think there may be some blow outs with inflation, but we expect ~200% to be the maximum.
+
+
+``` {r}
+test = which(unlist(lapply(Inflation20, is.numeric)))
+Inflation20[(nrow(Inflation20) + 1), test] <- colSums(Inflation20[, test], na.rm=TRUE) 
+#add a row that is cumulative inflation
+
+#Create a table of just Country and Total Inflation
+# TotalInflation20 = Inflation20 %>%
+#   rowid_to_column() %>%
+#   filter(rowid == 29) %>%
+#   gather(col, val, 1:20) %>%
+#   select(-rowid, -X)
+# names(TotalInflation20) <- c("Country", "Cum.Infaltion")
+# 
+# #Plot
+# MaxInflationPerCountryFigure <- ggplot(TotalInflation20, aes(reorder(CountryName, -Cum.Infaltion), Cum.Infaltion)) +
+#   scale_y_continuous(trans='log10') +
+#   geom_col() +
+#   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+#   labs(title = "Cumulative Inflation (2014 - 2018) per Country", y = "Cumulative Inflation", x = "Country")
+# 
+# MaxInflationPerCountryFigure <- ggplotly(MaxInflationPerCountryFigure)
+# MaxInflationPerCountryFigure
+
+```
+
+3. Histogram: For each year in the CPI data find which county had the highest change. Then plot each year, country, and max value in a histogram. How does the data look?
+  
+``` {r}
+test = Inflation20 %>% replace(is.na(.), 0) #make all na values 0 in the table
+YearlyMaxData <- data.frame(matrix(ncol = 3, nrow = 0))
+#create new empty table
+
+#for each year (1991 - 2018) find the country with the highest inflation. Then append that data to YearlyMaxData
+# for (x in 1:28) {
+#   #Find data
+#   InterYearMax = test %>%
+#   rowid_to_column() %>%
+#   filter(rowid == x) %>%
+#   gather(col, val, 1:20) %>%
+#   filter(val == max(val)) %>%
+#   select(-rowid)
+#   
+#   #Append data
+#   YearlyMaxData = rbind(YearlyMaxData, InterYearMax)
+# }
+# 
+# #Plot
+# MaxInflationPerYearFigure <- ggplot(data=YearlyMaxData, aes(x=X, y=val, fill=col)) +
+#   scale_y_continuous(trans='log10') +
+#   geom_bar(stat="identity") + 
+#   labs(title = "Highest Country Inflation (1991 - 2018) per Year", y = "Inflation", x = "Year")
+# 
+# MaxInflationPerYearFigure <- ggplotly(MaxInflationPerYearFigure)
+# MaxInflationPerYearFigure
+
+```
+
+6. Scatter Plot: Investigate the relationship between Total Reserves and Foreign reserves of Countries.
+
+Expectations:
+  We expect a straight line from origin to the top right. There are o other expectations, we believe this one will be cut and dry.
+
+Post Code: 
+  This is the most interesting plot of all the plots. We expected this to be a linear trend line and there to be no variability. However, what we got was happily surprising. We can see that countries generally take three approaches to reserves. Either the country holds a lot Total Reserves and not a lot of Foreign Reserves or vice verse. The Final approach is to hold neither (bottom left corner). Notable points of data: UK blows out the competition in Foreign Reserves and China blows out the competition in Total Reserves. This makes sense as the UK would want to hold a lot of USD and China would hold a lot of yuan as they have a closed economic system and trade a lot with the US. Our expectations were blown away. This plot is fun to observe.
+
+```{r}
+ZerodTotal = TotalReservesG20 %>% replace(is.na(.), 0) #Set all na values to 0
+ZerodForeign = FReservesG20 %>% replace(is.na(.), 0) #Set all na values to 0
+
+YearlyReserveData <- data.frame(matrix(ncol = 4, nrow = 0)) #Create a new table with 4 rows that is empty.
+
+#for each year (1991 - 2018) get data from each country for Total Reserves in a place holder table. Then find add a column from foreign reserves data to place holder table. Then append the final place holder table data to YearlyReserveData.
+for (x in 1:28) {
+  #Get data from each country for Total Reserves
+  InterYearTotal = ZerodTotal %>%
+  rowid_to_column() %>%
+  filter(rowid == x) %>%
+  gather(col, val, Canada:Belgium) %>%
+  select(-rowid)
+  
+  names(InterYearTotal) <- c("Year", "Country", "TotalReserves") #Rename
+  
+  #Get data from each country for Foreign Reserves
+  InterYearForiegn = ZerodForeign %>%
+  rowid_to_column() %>%
+  filter(rowid == x) %>%
+  gather(col, val, Canada:Belgium) %>%
+  select(-rowid, -X, -col)
+  
+  InterYearTotal$ForiegnReserves = InterYearForiegn$val #Add column from Foreign reserves to total reserves data
+  
+  YearlyReserveData = rbind(YearlyReserveData, InterYearTotal) #Append final place holder table data to YearlyReserveData
+}
+
+#plot
+YearlyReserveData %>% ggplot(aes(x = TotalReserves, y = ForiegnReserves, color = Country)) +
+  geom_point() + 
+  labs(title = "Scatter plot of Total vs Foreign Reserves per Country", y = "ForiegnReserves", x = "TotalReserves")
+```
