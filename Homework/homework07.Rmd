@@ -1,0 +1,67 @@
+---
+title: 'Homework #6'
+author: "Kate Mykhaylova"
+date: "3/20/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(classdata)
+library(ggplot2)
+```
+
+```{r}
+happy <- readRDS("data/HAPPY.rds")
+str(happy)
+```
+
+## Part 1
+
+1. Data cleaning: the values “IAP”, “DK” and “NA” all encode missing values. Replace all of these instances by the value NA.
+```{r}
+happy[happy == "IAP"] <- NA
+happy[happy == "DK"] <- NA
+happy[happy == "NA"] <- NA
+```
+
+2. Check the type of the variable and cast into the right type (factor variable for categorical variables). For age, change “89 OR OLDER” to 89 and assume the variable should be numeric.
+```{r}
+happy$AGE[happy$AGE == "89 OR OLDER"] <- "89"
+happy$AGE = as.numeric(happy$AGE)
+```
+
+3. Bring all levels of factors into a sensible order. For marital you could e.g. order the levels according to average age.
+```{r}
+happy$HAPPY = as.factor(happy$HAPPY) 
+happy$MARITAL = as.factor(happy$MARITAL)
+happy$HEALTH = as.factor(happy$HEALTH)
+happy$DEGREE = as.factor(happy$DEGREE)
+happy$SEX = as.factor(happy$SEX)
+happy$FINRELA = as.factor(happy$FINRELA)
+happy$PARTYID = as.factor(happy$PARTYID)
+happy = happy %>% mutate(DEGREE = factor(DEGREE, levels = c("LT HIGH SCHOOL","HIGH SCHOOL", "JUNIOR COLLEGE", "GRADUATE", 
+                                                            "BACHELOR"))) %>% 
+  mutate(FINRELA = factor(FINRELA, levels = c("FAR BELOW AVERAGE", "BELOW AVERAGE", "AVERAGE", "ABOVE AVERAGE", 
+                                              "FAR ABOVE AVERAGE"))) %>%
+  mutate(HEALTH= factor(HEALTH, levels = c("POOR", "FAIR", "EXCELLENT", "GOOD")))
+```
+
+## Part 2
+
+Investigate the relationship between happiness and two other variables in the data. Find a visualization that captures the relationship and write a paragraph to describe it.
+
+#### Kate Mykhaylova
+Health and Sex
+```{r}
+happy.HEALTH.SEX = happy %>%
+  group_by(HEALTH, SEX) %>%
+  summarise(m.happy = mean(as.numeric(unlist(happy)), na.rm  = TRUE)) %>%
+  arrange(m.happy)
+
+happy %>%  ggplot(aes(x = HEALTH, fill = SEX)) + 
+  geom_bar(aes(weight = 1), position = position_dodge2()) +
+  labs(title = "", y = "Happiness", x = "Health")
+# In general, we can see that people with higher health are happier than those with poorer health. The people in the "good" category have relatively higher happiness scores. Between males and females, we can see that females tend to be happier than males in all the categories, especially in the good health category.
+```

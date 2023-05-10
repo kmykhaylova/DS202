@@ -1,0 +1,27 @@
+---
+author: "Kate Mykhaylova"
+date: "5/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Team Member Names:
+Kate Mykhaylova
+
+#### Overview of Data: 
+Source: [Global Economic Monitor](https://www.kaggle.com/datasets/theworldbank/global-economic-monitor)
+
+There are multiple tables of data within this set. I am interested in:
+  -CPI Price, % y-o-y, seas. adj..xlsx
+  -Foreign Reserves, Months Import Cover, Goods.xlsx
+  -GDP at market prices, current US$, millions, seas. adj..xlsx
+  -Total Reserves.xlsx
+  
+I will be combining the data into one table which I will use. The data from these tables include information about inflation(CPI), foreign reserves held by a country, GDP of a country, and Total reserves held by the country. I can use this information to visualize how these numbers change over the months or quarters. I know that all these points of data are highly correlated to each other and even affect each other. My goal is to visualize this implication and causation pattern. Or-if nothing else-to show that the information is very loosely coordinated. 
+
+
+#### Cleaning the Data: 
+The data comes from the World Bank so it is already clean. The only cleaning I would have to do is finding a way to combine the tables. This will be a slight issue as some of the tables go by quarters while others go by months. To do this, I can either split the quarters into 3 months or  combine 3 months into 1 quarter. Right now I am leaning towards spliting the GDP data into 3 equal months. So for instance if 2000Q1 was 3% growth we will say January, February, and March has 1% growth. This seems like a more viable option since looking at months usually is more understandable for people.

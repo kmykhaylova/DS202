@@ -1,0 +1,75 @@
+---
+title: 'Homework #10'
+author: "Kate Mykhaylova"
+date: "4/26/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(classdata)
+```
+
+```{r}
+acc <- read.csv("https://raw.githubusercontent.com/DS202-at-ISU/labs/master/data/fars2016/accident.csv", stringsAsFactors = FALSE)
+names(acc)
+```
+
+## Part one: Accident data
+
+Are there some days of the week where more accidents happen than on others (use variable DAY_WEEK)?<br>
+```{r}
+acc.day.week = acc %>% group_by(DAY_WEEK) %>% summarise(n = n())
+acc.day.week = acc.day.week %>% mutate(DAY_WEEK = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
+acc.day.week.r = acc.day.week$DAY_WEEK
+level.reorder = levels(reorder(acc.day.week$DAY_WEEK, acc.day.week$n, fun = mean, na.rm=TRUE))
+acc.day.week.reorder = factor(acc.day.week.r, levels = level.reorder)
+acc.day.week$DAY_WEEK = acc.day.week.reorder
+acc.day.week %>% ggplot(aes(x = DAY_WEEK)) +
+  geom_bar(aes(weight = n))
+# There are more accidents occuring on Friday, Saturday, and Sunday, with most happening on Saturday.
+```
+
+What time of the day do accidents happen (use variable HOUR)?<br>
+```{r}
+acc.hour = acc %>% group_by(HOUR) %>% summarise(n = n())
+acc.hour <- acc.hour[-c(25), ]
+acc.hour %>% ggplot(aes(x = HOUR)) +
+  geom_bar(aes(weight = n))
+# Most accidents happen at 6pm.
+```
+
+What is the number of accidents with at least one drunk driver (use variable DRUNK_DR)?<br>
+```{r}
+acc.drunk = acc %>% filter(DRUNK_DR >= 1) %>% summarise(n = n())
+acc.drunk
+# There are 8720 accidents with at least one drunk driver.
+```
+
+## Part two: Connecting data
+
+Connect to the [person table](https://raw.githubusercontent.com/yumouqiu/DS202-Spring2022/main/Practice/data/fars2016/person.csv). Identify drivers (PER_TYP == 1, see fars manual ) and subset on them.
+```{r}
+# person.table = read.csv("https://github.com/yumouqiu/DS202-Spring2023/blob/main/Practice/data/fars2016/person.csv")
+# person.table = person.table %>% filter(PER_TYP == 1)
+# error when trying to read this data, can't find the object PER_TYP
+```
+
+Join accident and driver table (work out which variable(s) to use)
+```{r}
+# person.table = person.table %>% filter(SEX == 1 | SEX == 2)
+# acc.person = left_join(acc, person.table, by = c("ST_CASE", "HOUR", "MINUTE", "DAY", "MONTH"))
+```
+
+Tally the number of accidents by day of the week (DAY_WEEK), hour of the day (HOUR) and gender (SEX). Visualize the results!
+```{r}
+# acc.person.tally = acc.person %>% group_by(DAY_WEEK, HOUR, SEX) %>% 
+#  summarise(n = n())
+# acc.person.tally = na.omit(acc.person.tally)
+# acc.person.tally = acc.person.tally %>% filter(HOUR < 25)
+# acc.person.tally %>% ggplot(aes(x = HOUR, y = n, color = SEX)) +
+#  geom_point() + 
+#  facet_wrap(~DAY_WEEK)
+```
+
