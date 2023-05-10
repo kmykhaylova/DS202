@@ -1,0 +1,189 @@
+---
+title: "DS 202: Midterm Exam"
+author: "Kate Mykhaylova"
+date: "03/29/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For all of the questions below incorporate the necessary R code directy into your answers. You have 100 mins to complete this exam. At the end of the time period, upload your R Markdown file and the corresponding html file to Canvas. **Submit your results before 1:45pm.**
+
+## Story County Liquor Sales
+
+In this exam, we will study the liquor sales in Iowa. We will use two datasets, `Iowa_Liquor_Stores.csv` and `Story_County_Liquor_Sales_New.csv`, which are posted on **Canvas**.
+The first dataset records all the active and inactive liquor stores in Iowa as 2018/10/01. Please see the link https://data.iowa.gov/Economy/Iowa-Liquor-Stores/ykb6-ywnd for the information of the variables. You should be able to answer all of the following questions without the help of this website.
+
+The second dataset contains the spirits purchase information of Iowa Class "E" liquor licensees by product and date of purchase from January 1, 2012 to 2018. The dataset can be used to analyze total spirits sales in Story county of individual products at the store level.
+Class E liquor license, for grocery stores, liquor stores, convenience stores, etc., allows commercial establishments to sell liquor for off-premises consumption in original unopened containers.
+
+We will first consider the **liquor store data `Iowa_Liquor_Stores.csv`**.
+
+### Question #1 (25 points)
+
+```{r, message = FALSE}
+library(tidyverse)
+A = read.csv("Iowa_Liquor_Stores.csv", header = TRUE)
+```
+
+- How many records are in the data set, how many variables?
+```{r}
+str(A)
+# In the Iowa_Liquor_Stores.csv there are 1849 records and 9 variables.
+```
+
+- How many different states are included in the dataset? Use `filter()` function in `dplyr` package to remove the stores outside Iowa.
+```{r}
+length(unique(A$City))
+A_not_IA = A %>% filter(State != "IA")
+unique(A_not_IA$City)
+# There are 424 different cities in the dataset. The cities that are not in Iowa are Chicago, Atlanta, Pasadena, and Colorado Springs.
+```
+
+- How many different cities of Iowa are included in the dataset?  
+```{r}
+A = A %>% filter(State == "IA")
+length(unique(A$City))
+unique(A$City)
+# There are 419 different cities in Iowa.
+```
+
+- Introduce a new logical variable `Inactive` (TRUE or FALSE) based on `Store.Status`. This variable equal to `TRUE` if `Store.Status = "I"`, otherwise, it is `FALSE`. What is the overall percentage of the inactive liquor store?   
+```{r}
+A = A %>% mutate(Inactive = if_else(A$Store.Status == "I", TRUE, FALSE))
+(sum(A$Inactive) / (sum(A$Inactive) + sum(!A$Inactive))) * 100
+# The overall percentage of inactive liquor store is 16.59%
+```
+
+- Use the `group_by()` and `summarise()` functions in `dplyr` package to find the number of liquor stores and the percentage of inactive liquor stores for each city in Iowa. Arrange the summary data by the number of stores (from the largest to the smallest). Print the summary data for the top 10 cities.  
+```{r}
+library(dplyr)
+summary.A = A %>% group_by(City) %>% summarise(
+  numberOfStores = length(Store), (sum(Inactive) / (sum(Inactive) + sum(!Inactive))) * 100
+)
+summary.A
+```
+
+### Question #2 (15 points)
+
+- Remove all the inactive stores. Use the `group_by()` and `summarise()` functions to find the number of active liquor stores for each city in Iowa.  
+```{r, message = FALSE}
+A = A %>% filter(Store.Status == "A")
+```
+- Identify the cities with no less than 40 active liquor stores. Only consider those cities for the following two questions.
+```{r}
+table(A['City'])
+# The cities with over 40 liquor stores are Cedar Rapids, Council Bluffs, Davenport, Des Moines, and Dubuque.
+A_40 = A %>% filter(City == "Cedar Rapids" | City == "Council Bluffs" | City == "Davenport" | City == "Des Moines" | City == "Dubuque")
+head(A_40)
+```
+
+_ Make `City` variable as a factor.  
+```{r}
+A_40$City = as.factor(A_40$City) 
+```
+
+- Using ggplot2, draw a bar plot that shows the number of the liquor stores for those selected cities with no less than 40 active stores. Make sure the levels of the cities are ordered based on the number of stores.
+```{r}
+library(ggplot2)
+```
+
+```{r}
+A_40 %>% ggplot(aes(x = as.factor(City))) + 
+  geom_bar() +
+  ggtitle("") +
+  xlab("City") +
+  ylab("Stores")
+```
+
+### Question #3 (20 points)
+
+- Use `separate` function from the `tidyr` package to separate the column `Name` into two two columns, separate by " " (space character). You may use the code
+```{r}
+library(tidyr)
+A.company = A %>% separate(Name, into = c("company", "name2"), sep = " ") %>% select(-name2)
+```
+Identify the top four companies with the most number of active stores in Iowa. Rename all other stores (other than the top four companies) as "other" for the variable `company`.
+```{r}
+table(A.company$company)
+# Top four companies in Iowa are Casey's (307), Fareway (105), Hy-Vee (127), and Kum&Go(88). 
+head(A.company)
+```
+
+- Create a new data set only include the stores from those four companies and the cities with no less than 40 active stores. Order the level of the companies by their total number of stores.  
+```{r}
+A_4 = A.company %>% filter(company == "Casey's" | company == "Fareway" | company == "Hy-Vee" | company == "Kum")
+A_4 = A_4 %>% filter(City == "Cedar Rapids" | City == "Council Bluffs" | City == "Davenport" | City == "Des Moines" | City == "Dubuque")
+table(A_4$company)
+```
+
+- Using the new data set, make a bar chart to compare the number of stores for those four companies for the cities with no less than 40 active stores. Please use different color to identify the four companies, and use the `dodge` option for the bar chart.
+```{r}
+A_4 %>% ggplot(aes(x = as.factor(company), fill = company)) + 
+  geom_bar(position = position_dodge()) +
+  ggtitle("") +
+  xlab("Company") +
+  ylab("Stores")
+```
+
+### Question #4 (15 points)
+
+- Use the following code to extract the lattitude and longtitude from the variable `Store.Address`. 
+```{r}
+A.location1 = A.company %>% separate(Store.Address, into = c("Address", "Location"), sep = "\n\\(")
+A.location2 = A.location1 %>% separate(Location, into = c("Latitude", "Longitude"), sep = ",") %>% select(-Address)
+A.location = A.location2 %>% separate(Longitude, into = c("Longitude", "drop"), sep = "\\)") %>% select(-drop)
+```
+Use ggplot2, draw a scatter plot of the location of all active liquor stores in Iowa by the lattitude and longtitude. Use different colors for the variable `company`. Note that we may need to change the format of lattitude and longtitude.
+
+```{r, message = FALSE}
+A.location %>% ggplot(aes(x = Latitude, y = Longitude)) + 
+  geom_point()
+```
+
+<br>
+
+Now, we use the **liquor sale data `Story_County_Liquor_Sales_New.csv`**.
+Note that: **Don't knit your Rmarkdown file often.** It will be slow since this dataset is large. You can run each code chuck or each line separately once the dataset is read into the environment. You can knit after everything is ready.
+
+### Question #5 (25 points)
+
+```{r, message = FALSE}
+A_new = read.csv("Story_County_Liquor_Sales_New.csv", header = TRUE)
+str(A_new)
+```
+- Convert `Volume.Sold..Liters.` and `Sale..Dollars.` to numeric variables (Be careful to convert factor to numeric, first convert factor to character and then character to numeric.)
+```{r}
+A_new$Sale..Dollars. = as.numeric(A_new$Sale..Dollars, na.rm = TRUE)
+A_new$Volume.Sold..Liters. = as.numeric(A_new$Volume.Sold..Liters., na.rm = TRUE)
+str(A_new)
+```
+
+- Only consider the data from Ames. Check the variable `City`. Several of them should be same city but regarded as different levels in the data set. Fix them.
+```{r}
+A_new_ames = A_new %>% filter(City == "AMES")
+levels(A_new_ames$City)
+```
+
+- Extract year, month and day from the variable `Date`. 
+```{r}
+A_new_ames = A_new_ames %>% separate(Date, into = c("month", "day", "year"), sep = "/")
+```
+
+- Use the `group_by()` and `summarise()` functions in `dplyr` package to obtain a summarized data set of total `Volume.Sold..Gallons.` and `Sale..Dollars.` for different combinations of `month` and `year`.
+```{r}
+A_new_ames.summary = A_new_ames %>% group_by(month, year, Store.Name) %>% summarise(
+  volume = sum(Volume.Sold..Gallons.),
+  sale = sum(Sale..Dollars.)
+)
+A_new_ames.summary
+```
+
+- Draw a scatter plot for the trend of total sale over month. Please separate the trend for different years. You need to use `color` option in ggplot2.
+
+```{r, message = FALSE}
+A_new_ames.summary %>% ggplot(aes(x = month, y = sale, color = as.factor(year))) + 
+  geom_point()
+```
